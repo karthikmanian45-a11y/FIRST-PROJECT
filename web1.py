@@ -3,15 +3,11 @@ from bank import Bank
 from main import Account
 from current import CurrentAccount
 from savings import SavingsAccount
-import sqlite3
+import os
 
 app=Flask(__name__)
 B=Bank()
 
-def init():
-     con=sqlite3.connect("bank.db")
-     cur=con.cursor()
-     con.execute("CREATE TABLE IF NOT EXISTS bank(acc_no INTEGER , name TEXT , balance INTEGER)")
 @app.route("/")
 def home():
     return "WELCOME TO MY BANK ACCOUNT PROJECT"
@@ -47,11 +43,7 @@ def accounts():
 @app.route("/add_acc",methods=["GET","POST"])
 def ad_acc():
         if request.method=="POST":
-             con=sqlite3.connect("bank.db")
-             cur=con.cursor()
              req=request.get_json()
-             cur.execute("INSERT INTO bank VALUES=(?,?)",(req["acc_no"],req["name"]))
-             con.commit()
              a=CurrentAccount(req["acc_no"],req["name"])
              B.add_acc(a)
              return "Account added successfully"
@@ -60,9 +52,6 @@ def ad_acc():
 def rem_acc():
         if request.method=="POST":
              req=request.get_json()
-             con=sqlite3.connect("bank.db")
-             cur=con.cursor()
-             cur.execute("DELETE FROM bank WHERE acc_no=?"(req["acc_no"],))
              B.remove_acc(req["acc_no"])
              return "Account removed successfully"
 
@@ -77,7 +66,7 @@ def fin_acc():
 def saving():
      if request.method=="POST":
           req=request.get_json()
-          a=B.find_account(req["acc_no"])
+          a=B.find_acc(req["acc_no"])
           return str(a.calculate_interest())
 @app.route("/is_valid_amount",methods=["GET","POST"])
 def valid():
@@ -86,7 +75,9 @@ def valid():
           return str(B.is_valid_amount(req["amount"]))
 @app.route("/total_accounts")
 def acc():
-     return str(b.total_accounts())
+     return str(B.total_accounts())
 
 
-app.run(debug=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
